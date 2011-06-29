@@ -41,12 +41,14 @@ if($parameters{m})							#if a minimum is defined, change the minimum number of 
 }
 
 print "Opening $parameters{s}...";
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{s}");		#formats to UNIX newline characters
 unless (open(SEQIN, $parameters{s}))       #tries to open file
 {
 	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
 print "Successful.\nOpening $parameters{b}...";
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{b}");		#formats to UNIX newline characters
 unless (open(BARIN, $parameters{b}))       #tries to open file
 {
 	print "Unable to open $parameters{b}\nMake sure you entered the extension when entering the file name.";
@@ -144,29 +146,13 @@ sub open_barcodes()
 	my $barLine = "";
 	while($barLine = <BARIN>)
 	{
-		if(($barLine =~ /\r/) && !($barLine =~ /\n/))			#If CR newline
-		{
-			@barcodes = split(/\r/, $barLine);
-			$barcodesSize = scalar @barcodes;
-			for($a = 0; $a < $barcodesSize; $a++)
-			{
-				if(!($barcodes[$a] =~ /[a-zA-Z]/))				#removes blank lines from barcode list
-				{
-					splice(@barcodes, $a, 1);
-					$a--;
-					$barcodesSize--;
-				}
-			}
-			last;
-		}
-		
 		if($barLine =~ /[a-zA-Z]/)						#makes sure that it only adds lines with barcodes in them
 		{
 			push(@barcodes, $barLine);
 		}
 	}
-	$barcodesSize = scalar @barcodes;
 	close BARIN;
+	$barcodesSize = scalar @barcodes;
 	
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
