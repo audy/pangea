@@ -4,7 +4,7 @@
 # Written by: David Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: June 4, 2010
+# Last Modified: June 29, 2011
 #################################################
 #
 #	Parameters:
@@ -40,20 +40,22 @@ if($parameters{m})
 	$qualityCut = $parameters{m};
 }
 
+
+
 print "Opening $parameters{s}...";
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{s}");		#formats to UNIX newline characters
 unless (open(INPUTSEQ, $parameters{s}))       #tries to open Sequence file
 {
 	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
-system("perl -pe 's/\\r\\n|\\n|\\r/\\n/g'   $parameters{s} > $parameters{s}");	  # Convert to UNIX format
 print "Successful.\nOpening $parameters{q}...";
-unless(open(INPUTQUAL, $parameters{q}))		#tries to open Qual file
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{q}");		#formats to UNIX newline characters
+unless(open(INPUTQUAL, $parameters{q}))		#tries to open Qual file to test before formatting.
 {
 	print "Unable to open $parameters{q}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
-
 print "Successful.\nTrimming and Writing File...";
 
 open OUTPUT, ">$parameters{o}" or die $!;
@@ -65,6 +67,7 @@ $sum = 0;
 $start = 0;
 $first = 0;
 $lineNum = 0;
+print "\n";
 while($lineSeq = <INPUTSEQ>)
 {
 	$lineQual = <INPUTQUAL>;
