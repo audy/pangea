@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: June 28, 2011
+# Last Modified: June 30, 2011
 #################################################
 #
 #	Parameters:
@@ -22,6 +22,13 @@ use Getopt::Std;
 my %parameters;
 $dir = "";
 $minNorm = 100;
+@barcodes = ();								# Will contain the barcodes
+@barNames = ();								# Will contain the barcode names
+@storedLines = ();							# Used for processing the input sequence file
+$count = 0;									# Counts the total number of sequences
+$countNoBar = 0;							# Counts the number of sequences with no barcode
+$countNorm = 0;								# Counts the number of sequences with barcode found
+
 getopts('s:b:d:m:', \%parameters);					#Takes parameters
 
 unless($parameters{s} && $parameters{b})
@@ -54,34 +61,28 @@ unless (open(BARIN, $parameters{b}))       #tries to open file
 	print "Unable to open $parameters{b}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
-@barcodes = ();								#will contain the barcodes
-open_barcodes();							#processes the barcodes taking into account the newline characters and skipping empty lines; also creates the hash for barcode counts
-create_files();
+open_barcodes();							# Processes the barcodes, skipping empty lines; also creates the hash for barcode counts
 
 print "Successful.\nCreating Files...\n";
-
-@storedLines = ();
-$count = 0;
-$countNoBar = 0;
-$countNorm = 0;
+create_files();								# Creates the output files
 
 while($line = <SEQIN>)
 {
-	if($line =~ />/)								#if new sequence, print previous sequence
+	if($line =~ />/)								# If new sequence, print previous sequence
 	{
 		chomp($line);
 		$storeSize = scalar @storedLines;
-		if($storeSize > 0)							#print if there is a sequence stored
+		if($storeSize > 0)							# Print if there is a sequence stored
 		{
-			find_and_print_barcode(@storedLines);
-			@storedLines = ();
+			find_and_print_barcode(@storedLines);	
+			@storedLines = ();						# Resets @storedLines to prepare for the next sequence
 		}
-		push(@storedLines, $line);
-		$count++;
+		push(@storedLines, $line);					# Stores the header first
+		$count++;									# Marks that we have found another sequence
 	}
 	else
 	{
-		if($line ne "\n")							#if line is not empty, store
+		if($line ne "\n")							# If line has some letters in it, store
 		{
 			push(@storedLines, $line);
 		}
@@ -95,31 +96,41 @@ print_counts();
 print "Finished!\n\n";
 
 #######################################	  SUBROUTINES	#######################################
-sub find_and_print_barcode()				#finds any barcode in the sequence and prints in the correct file.
+sub create_files()
 {
-	$heading = shift;
-	$heading = substr($heading, 1);
-	my $bar = "";
-	$firstLine = shift;	
-	foreach $barcode (keys %barcounts)
+	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		if($firstLine =~ /^$barcode/)		#if barcode is found at beginning
+		open BAR, ">$dir"."$barNames[$a].fas" or die $!;
+		close BAR;
+	}
+	open NOBAR, ">$dir"."nobar.fas" or die $!;
+	close NOBAR;
+}
+
+sub find_and_print_barcode()								# Finds any barcode in the sequence and prints in the correct file.
+{
+	my $bar = "";
+	my $heading = shift;
+	my $firstLine = shift;
+	$heading = substr($heading, 1);							# Removes ">" character
+	foreach $barcode (keys %barcounts)						# Iterates through barcodes
+	{
+		if($firstLine =~ /^$barcode/)						# If barcode is found at beginning
 		{
 			$bar = $barcode;
-			last;
+			last;											# End the search if barcode matches at beginning of sequence, that is perfect
 		}
 	}
 	
-	if($bar ne "")
+	if($bar ne "")											# If a barcode is matched, i.e. $bar has been changed from ""
 	{
 		$num = $barnum{$bar};
-		$countNorm++;
-		$barcounts{$bar}++;
-		$openNum = $num + 1;
-		open BAR, ">>$dir"."bar$openNum.fas" or die $!; 
-		print BAR ">$openNum"."_$heading\n";
+		$countNorm++;										# A normal, matching barcode has been found
+		$barcounts{$bar}++;									# Add one to this barcode's total
+		open BAR, ">>$dir"."$barName[$num].fas" or die $!; 
+		print BAR ">$barName[$num]"."_$heading\n";
 		$barcodeLength = length($bar);
-		$firstLine = substr($firstLine, $barcodeLength);
+		$firstLine = substr($firstLine, $barcodeLength);	# Removes the first $barcodeLength characters, which is the barcode
 		print BAR "$firstLine";
 		while($seqLine = shift)
 		{
@@ -127,10 +138,10 @@ sub find_and_print_barcode()				#finds any barcode in the sequence and prints in
 		}
 		close BAR;
 	}
-	else
+	else													# No matching barcode was found
 	{
-		$countNoBar++;
-		open NOBAR, ">>$dir"."nobar.fas" or die $!;
+		$countNoBar++;										# Count it!
+		open NOBAR, ">>$dir"."nobar.fas" or die $!;			# Add it to the no barcode file
 		print NOBAR ">$heading\n";
 		print NOBAR "$firstLine";
 		while($seqLine = shift)
@@ -139,6 +150,28 @@ sub find_and_print_barcode()				#finds any barcode in the sequence and prints in
 		}
 		close NOBAR;
 	}
+}
+
+sub find_and_print_min()
+{
+	my $min = -1;
+	foreach (keys %barcounts)
+	{
+		if($barcounts{$_} > $minNorm)						# If the number of barcodes is greater than the minimum normalizing amount
+		{
+			if($min == -1)									# If no minimum has been found yet, then this number of sequences is the new minimum
+			{
+				$min = $barcounts{$_};
+			}
+			if($barcounts{$_} < $min)						# If this number of sequences is smaller than the current minimum, then it is the new minimum
+			{
+				$min = $barcounts{$_};
+			}
+		}
+	}
+	open MIN, ">$dir"."info.txt" or die $!;					# Print the minimum so it can be read by PANGEA
+	print MIN $min;
+	close MIN;
 }
 
 sub open_barcodes()
@@ -153,37 +186,16 @@ sub open_barcodes()
 	}
 	close BARIN;
 	$barcodesSize = scalar @barcodes;
-	
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		my $dex = index($barcodes[$a], "\t") + 1;
-		$barcodes[$a] =~ s/\s+$//;								#Eliminate white space
-		$barcodes[$a] =  uc substr($barcodes[$a], $dex, length($barcodes[$a]) - $dex);		#trimming the line down to the actual barcode
-		$barnum{$barcodes[$a]} = $a;
+		my @split_Line = split(/\t/, $barcodes[$a]);
+		$split_Line[0] =~ s/\s+$//;						# Eliminate white space from barcode name
+		push(@barNames, $split_Line[0]);
+		$barcodes[$a] = $split_Line[1];
+		$barcodes[$a] =~ s/\s+$//;						# Eliminate white space from barcode
+		$barnum{$barcodes[$a]} = $a;					# Keeps track of what number the barcode is
 	}
 	%barcounts = map { $_ => 0 } @barcodes;								#create a hash to keep the barcode counts
-}
-
-sub find_and_print_min()
-{
-	my $min = 1;
-	foreach (keys %barcounts)
-	{
-		if($barcounts{$_} > $minNorm)
-		{
-			if($min == 1)
-			{
-				$min = $barcounts{$_};
-			}
-			if($barcounts{$_} < $min)
-			{
-				$min = $barcounts{$_};
-			}
-		}
-	}
-	open MIN, ">$dir"."info.txt" or die $!;
-	print MIN $min;
-	close MIN;
 }
 
 sub print_counts()
@@ -191,19 +203,7 @@ sub print_counts()
 	open COUNT, ">$dir"."barcode_counts.txt" or die $!;
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		my $num = $a + 1;
-		print COUNT "$num"."\t"."$barcodes[$a]"."\t"."$barcounts{$barcodes[$a]}"."\n";	
+		print COUNT "$barNames[$a]\t$barcodes[$a]\t$barcounts{$barcodes[$a]}"."\n";	
 	}
 	close COUNT;
-}
-
-sub create_files()
-{
-	for($a = 1; $a <= $barcodesSize; $a++)
-	{
-		open BAR, ">$dir"."bar$a.fas" or die $!;
-		close BAR;
-	}
-	open NOBAR, ">$dir"."nobar.fas" or die $!;
-	close NOBAR;
 }
