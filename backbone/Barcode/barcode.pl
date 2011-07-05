@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: June 30, 2011
+# Last Modified: July 5, 2011
 #################################################
 #
 #	Parameters:
@@ -27,9 +27,9 @@ $minNorm = 100;
 @storedLines = ();							# Used for processing the input sequence file
 $count = 0;									# Counts the total number of sequences
 $countNoBar = 0;							# Counts the number of sequences with no barcode
-$countNorm = 0;								# Counts the number of sequences with barcode found
+$countNorm = 0;								# Counts the number of sequences with barcode found 
 
-getopts('s:b:d:m:', \%parameters);					#Takes parameters
+getopts('s:b:d:m:', \%parameters);			# Takes parameters
 
 unless($parameters{s} && $parameters{b})
 {
@@ -179,7 +179,7 @@ sub open_barcodes()
 	my $barLine = "";
 	while($barLine = <BARIN>)
 	{
-		if($barLine =~ /[a-zA-Z]/)						#makes sure that it only adds lines with barcodes in them
+		if($barLine =~ /[a-zA-Z]/)							# Makes sure that it only adds lines with barcodes in them
 		{
 			push(@barcodes, $barLine);
 		}
@@ -189,13 +189,13 @@ sub open_barcodes()
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
 		my @split_Line = split(/\t/, $barcodes[$a]);
-		$split_Line[0] =~ s/\s+$//;						# Eliminate white space from barcode name
+		$split_Line[0] =~ s/\s+$//;							# Eliminate white space from barcode name
 		push(@barNames, $split_Line[0]);
 		$barcodes[$a] = $split_Line[1];
-		$barcodes[$a] =~ s/\s+$//;						# Eliminate white space from barcode
-		$barnum{$barcodes[$a]} = $a;					# Keeps track of what number the barcode is
+		$barcodes[$a] =~ s/\s+$//;							# Eliminate white space from barcode
+		$barnum{$barcodes[$a]} = $a;						# Keeps track of what number the barcode is
 	}
-	%barcounts = map { $_ => 0 } @barcodes;								#create a hash to keep the barcode counts
+	%barcounts = map { $_ => 0 } @barcodes;					# Create a hash to keep the barcode counts
 }
 
 sub print_counts()
