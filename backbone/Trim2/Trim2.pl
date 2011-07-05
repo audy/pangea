@@ -4,7 +4,7 @@
 # Written by: David Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: June 29, 2011
+# Last Modified: July 5, 2011
 #################################################
 #
 #	Parameters:
@@ -86,7 +86,15 @@ while($lineSeq = <INPUTSEQ>)
 		
 		#Trim off heading
 		$space = index($lineSeq, " ") + 1;
-		$header = substr($lineSeq, 0, $space);
+		if($space == 0)									# If no space was found in the header
+		{
+			chomp($lineSeq);
+			$header = $lineSeq;							# Leave it alone
+		}
+		else
+		{
+			$header = substr($lineSeq, 0, $space);		# If a space was found, trim off the part after it		
+		}
 		@FinalTrim = ();
 		$max = 0;
 		$sum = 0;
