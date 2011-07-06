@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: July 5, 2011
+# Last Modified: July 6, 2011
 #################################################
 #
 #	Parameters:
@@ -23,7 +23,7 @@ my %parameters;
 $dir = "";
 $minNorm = 100;
 @barcodes = ();								# Will contain the barcodes
-@barNames = ();								# Will contain the barcode names
+%barNames = ();								# A hash that will map the names of the barcodes to the barcodes
 @storedLines = ();							# Used for processing the input sequence file
 $count = 0;									# Counts the total number of sequences
 $countNoBar = 0;							# Counts the number of sequences with no barcode
@@ -100,7 +100,7 @@ sub create_files()
 {
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		open BAR, ">$dir"."$barNames[$a].fas" or die $!;
+		open BAR, ">$dir"."$barNames{$barcodes[$a]}.fas" or die $!;
 		close BAR;
 	}
 	open NOBAR, ">$dir"."nobar.fas" or die $!;
@@ -112,7 +112,6 @@ sub find_and_print_barcode()								# Finds any barcode in the sequence and prin
 	my $bar = "";
 	my $heading = shift;
 	my $firstLine = shift;
-	$heading = substr($heading, 1);							# Removes ">" character
 	foreach $barcode (keys %barcounts)						# Iterates through barcodes
 	{
 		if($firstLine =~ /^$barcode/)						# If barcode is found at beginning
@@ -124,11 +123,11 @@ sub find_and_print_barcode()								# Finds any barcode in the sequence and prin
 	
 	if($bar ne "")											# If a barcode is matched, i.e. $bar has been changed from ""
 	{
-		$num = $barnum{$bar};
 		$countNorm++;										# A normal, matching barcode has been found
 		$barcounts{$bar}++;									# Add one to this barcode's total
-		open BAR, ">>$dir"."$barName[$num].fas" or die $!; 
-		print BAR ">$barName[$num]"."_$heading\n";
+		open BAR, ">>$dir"."$barNames{$barcodes[$num]}.fas" or die $!;
+		$heading = substr($heading, 1);						# Removes ">" character
+		print BAR ">$barNames{$barcodes[$num]}"."_$heading\n";
 		$barcodeLength = length($bar);
 		$firstLine = substr($firstLine, $barcodeLength);	# Removes the first $barcodeLength characters, which is the barcode
 		print BAR "$firstLine";
@@ -190,10 +189,9 @@ sub open_barcodes()
 	{
 		my @split_Line = split(/\t/, $barcodes[$a]);
 		$split_Line[0] =~ s/\s+$//;							# Eliminate white space from barcode name
-		push(@barNames, $split_Line[0]);
 		$barcodes[$a] = $split_Line[1];
 		$barcodes[$a] =~ s/\s+$//;							# Eliminate white space from barcode
-		$barnum{$barcodes[$a]} = $a;						# Keeps track of what number the barcode is
+		$barNames{$barcodes[$a]} = $split_Line[0];			# Maps the name of the barcode to the barcode
 	}
 	%barcounts = map { $_ => 0 } @barcodes;					# Create a hash to keep the barcode counts
 }
@@ -203,7 +201,7 @@ sub print_counts()
 	open COUNT, ">$dir"."barcode_counts.txt" or die $!;
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		print COUNT "$barNames[$a]\t$barcodes[$a]\t$barcounts{$barcodes[$a]}"."\n";	
+		print COUNT "$barNames{$barcodes[$num]}\t$barcodes[$a]\t$barcounts{$barcodes[$a]}"."\n";	
 	}
 	close COUNT;
 }
