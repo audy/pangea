@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: July 26, 2010
+# Last Modified: July 8, 2010
 #################################################
 #
 #	Parameters:
@@ -15,7 +15,6 @@
 #		-e e-value upper threshold (DEFAULT: -20)
 #		-b bitscore lower threshold (200)
 #		-d directory of output
-#		-o additional output name
 #
 #################################################
 
@@ -23,10 +22,12 @@ use Getopt::Std;
 
 #Organizes input
 my %parameters;
-$dir = "";
-$out = "";
+$ETHRESHOLD = exp(-20);								# Default e-value upper threshold
+$BTHRESHOLD = 200;									# Default bitscore lower threshold
+$dir = "";											# Default output directory is the current directory
+
 $printLoc = -1;
-getopts('s:m:p:d:o:', \%parameters);				#Takes parameters
+getopts('s:m:p:d:', \%parameters);					# Takes parameters
 
 unless($parameters{s} && $parameters{m} && $parameters{p})
 {
@@ -34,47 +35,50 @@ unless($parameters{s} && $parameters{m} && $parameters{p})
 	exit;
 }
 
-$pthres = $parameters{p};					# Setting the cutoff value to the thres variable
+$extIndex = index($parameters{s}, ".") + 1;			# Determines the location of the "." of the extension of a file or returns 0 if it is not there
+if($extIndex > 0)
+{
+	$out = substr($parameters{s}, 0, $extIndex);	# If there is an extension, take everything up until, but not including extension
+}
+else
+{
+	$out = $parameters{s};							# If there is no extension, no need to adjust
+}	
 
-$ethres = exp(-20);
-if($parameters{e})
+$PTHRESHOLD = $parameters{p};						# Set the similarity level as defined by the user
+
+if($parameters{e})									# If user defined a new e-value upper threshold
 {
 	$ethres = exp($parameters{e});
 }
 
-$bthres = 200;
-if($parameters{b})
+if($parameters{b})									# If user defined a new bitscore lower threshold
 {
 	$bthres = $parameters{b};
 }
 
-if($parameters{d})
+if($parameters{d})									# If user defined a new output directory
 {
-	$dir = "$parameters{d}";				#Sets directory, because we are not taking output file names for each file
+	$dir = "$parameters{d}";
 }
 
-if($parameters{o})							#Allows for the second labeling step, i.e., "classunclass or unclassunclass"
-{
-	$out = "$parameters{o}";
-}
-
-unless (open(SEQIN, $parameters{s}))       #tries to open file
+unless (open(SEQIN, $parameters{s}))       			# Try to open file
 {
 	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
-unless (open(MEGAIN, $parameters{m}))       #tries to open file
+unless (open(MEGAIN, $parameters{m}))       		# Try to open file
 {
 	print "Unable to open $parameters{m}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
 
-open CLASSOUT, ">$dir"."class$out$pthres.fas" or die $!;
-open UNCLASSOUT, ">$dir"."unclass$out$pthres.fas" or die $!;
+open CLASSOUT, ">$dir"."C_$out"."_$pthres.fas" or die $!;
+open UNCLASSOUT, ">$dir"."U_$out"."_$pthres.fas" or die $!;
 $megaLine = <MEGAIN>;
 while($seqLine = <SEQIN>)
 {
-	if($seqLine =~ />/)						#if new sequence...
+	if($seqLine =~ />/)								# If new sequence...
 	{
 		@seqHeading = split("_", $seqLine);
 		$size = scalar @seqHeading;
