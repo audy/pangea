@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: July 6, 2011
+# Last Modified: July 8, 2011
 #################################################
 #
 #	Parameters:
@@ -37,26 +37,26 @@ unless($parameters{s} && $parameters{b})
 	exit;
 }
 
-if($parameters{d})							#if directory is defined, it adds a directory to the files that will be created
+if($parameters{d})												# If directory is defined, it adds a directory to the files that will be created
 {
 	$dir = $parameters{d}."/";
 }
 
-if($parameters{m})							#if a minimum is defined, change the minimum number of sequences
+if($parameters{m})												# If a minimum is defined, change the minimum number of sequences
 {
 	$minNorm = $parameters{m};
 }
 
 print "Opening $parameters{s}...";
-system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{s}");		#formats to UNIX newline characters
-unless (open(SEQIN, $parameters{s}))       #tries to open file
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{s}");		# Formats to UNIX newline characters
+unless (open(SEQIN, $parameters{s}))       						# Tries to open file
 {
 	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
 print "Successful.\nOpening $parameters{b}...";
-system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{b}");		#formats to UNIX newline characters
-unless (open(BARIN, $parameters{b}))       #tries to open file
+system("perl -pi -e 's/\\r\\n|\\r/\\n/g' $parameters{b}");		# Formats to UNIX newline characters
+unless (open(BARIN, $parameters{b}))       						# Tries to open file
 {
 	print "Unable to open $parameters{b}\nMake sure you entered the extension when entering the file name.";
 	exit;
