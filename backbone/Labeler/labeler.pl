@@ -4,7 +4,7 @@
 # Written by: David B. Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: July 13, 2011
+# Last Modified: July 14, 2011
 #####################################################
 #
 #	Parameters:
@@ -29,6 +29,8 @@ $BTHRESHOLD = 200;									# Default bitscore lower threshold
 $dir = "";											# Default output directory is the current directory
 
 $printLoc = -1;										# Will tell the script which file to print a sequence in. Unclassified = 0, Classified = 1
+%megablast = ();									# Will contain the important megablast results for determining classification
+
 getopts('s:m:p:o:d:e:b:l:', \%parameters);			# Takes parameters
 
 unless($parameters{s} && $parameters{m} && $parameters{p})
@@ -75,20 +77,30 @@ if($parameters{l})
 	$num_labeled = $parameters{l};
 }
 
-unless (open(SEQIN, $parameters{s}))       			# Try to open file
-{
-	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
-	exit;
-}
 unless (open(MEGAIN, $parameters{m}))       		# Try to open file
 {
 	print "Unable to open $parameters{m}\nMake sure you entered the extension when entering the file name.";
 	exit;
 }
 
+while($megaLine = <MEGAIN>)							# Creates a hash that contains the names of the sequences and their megablast results
+{
+	@split_Mega = split("\t", $megaLine);
+	if($split_Mega[2] >= $PTHRESHOLD && $split_Mega[10] <= $ETHRESHOLD && $split_Mega[11] >= $BTHRESHOLD)
+	{
+		$megablast{$split_Mega[0]} = "$split_Mega[2]";
+	}
+}
+close MEGAIN;
+
+
+unless (open(SEQIN, $parameters{s}))       			# Try to open file
+{
+	print "Unable to open $parameters{s}\nMake sure you entered the extension when entering the file name.";
+	exit;
+}
 open CLASSOUT, ">$dir"."C$PTHRESHOLD"."_$out.fas" or die $!;
 open UNCLASSOUT, ">$dir"."U$PTHRESHOLD"."_$out.fas" or die $!;
-$megaLine = <MEGAIN>;
 while($seqLine = <SEQIN>)
 {
 	if($seqLine =~ />/)								# If new sequence...
@@ -99,34 +111,20 @@ while($seqLine = <SEQIN>)
 		if($num_labeled > 0)
 		{
 			$start = $num_labeled * 4;				# Will skip the labels
-			$seqName = substr($seqLine, $start);
+			$seqName = substr($seqName, $start);
 		}
 		
-		@megaName = split("\t", $megaLine);			# Split the megablast output file up
-		if($seqName eq $megaName[0])
+		if(exists($megablast{$seqName}))
 		{
 			$seqName = substr($seqLine, 1);			# Restores the labels for further labeling
-			if($megaName[2] < $PTHRESHOLD || $megaName[10] > $ETHRESHOLD || $megaName[11] < $BTHRESHOLD)
-			{
-				printU();
-				$printLoc = 1;
-			}
-			else
-			{
-				printC();
-				$printLoc = 0;
-			}
-			$oldMega = $megaName[0];
-			while($oldMega eq $megaName[0])
-			{
-				$megaLine = <MEGAIN>;				#Gets new line, only if the previous megablast result sequence was found and makes sure the new sequence has a different name
-				@megaName = split("\t", $megaLine);						#split the megablast output file up
-			}
+			printC();
+			$printLoc = 0;
 		}
 		else
 		{
-				printU();
-				$printLoc = 1;
+			$seqName = substr($seqLine, 1);			# Restores the labels for further labeling
+			printU();
+			$printLoc = 1;
 		}
 	}
 	else
