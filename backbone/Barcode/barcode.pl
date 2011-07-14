@@ -125,9 +125,9 @@ sub find_and_print_barcode()								# Finds any barcode in the sequence and prin
 	{
 		$countNorm++;										# A normal, matching barcode has been found
 		$barcounts{$bar}++;									# Add one to this barcode's total
-		open BAR, ">>$dir"."$barNames{$barcodes[$num]}.fas" or die $!;
+		open BAR, ">>$dir"."$barNames{$bar}.fas" or die $!;
 		$heading = substr($heading, 1);						# Removes ">" character
-		print BAR ">$barNames{$barcodes[$num]}"."_$heading\n";
+		print BAR ">$barNames{$bar}"."_$heading\n";
 		$barcodeLength = length($bar);
 		$firstLine = substr($firstLine, $barcodeLength);	# Removes the first $barcodeLength characters, which is the barcode
 		print BAR "$firstLine";
@@ -201,7 +201,7 @@ sub print_counts()
 	open COUNT, ">$dir"."barcode_counts.txt" or die $!;
 	for($a = 0; $a < $barcodesSize; $a++)
 	{
-		print COUNT "$barNames{$barcodes[$num]}\t$barcodes[$a]\t$barcounts{$barcodes[$a]}"."\n";	
+		print COUNT "$barNames{$barcodes[$a]}\t$barcodes[$a]\t$barcounts{$barcodes[$a]}"."\n";	
 	}
 	close COUNT;
 }
