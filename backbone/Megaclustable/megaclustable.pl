@@ -4,7 +4,7 @@
 # Written by: David Crabb
 # Eric Triplett's Group
 # University of Florida
-# Last Modified: June 28, 2010
+# Last Modified: July 15, 2011
 ###########################################################################################
 #
 #	Parameters:
@@ -25,10 +25,16 @@ unless($parameters{m} && $parameters{t} && $parameters{o})
 	exit;
 }
 
+if($parameters{t} < 1 || $parameters{t} > 7)
+{
+	print "You entered the level of taxa as $parameters{t}. The level of taxa must be between 1 and 7, where 1 = domain and 7 = species.\n";
+	exit;
+}
+
 $tax = $parameters{t} - 1;
 @megaclustfiles = split(/,/, $parameters{m});
-$count = 0;
 %table = ();
+$count = 0;
 
 foreach(@megaclustfiles)
 {
@@ -48,8 +54,8 @@ foreach(@megaclustfiles)
 			add_to_filehash();
 		}
 	}
-	add_hash_to_table();
 	close MEGA;
+	add_hash_to_table();
 	
 	open OUTPUT, ">$parameters{o}" or die $!;
 	print_out();
@@ -74,27 +80,37 @@ sub print_out()
 sub add_to_filehash()
 {
 	my $index = index($line, "[$tax]") + 3;
-	#if that level of taxonomic name is not present in the taxonomy, skip it.
-	if($index == 2)
-	{
-		return;
-	}
-	my $stop = index($line, ";", $index);
 	my $comma = index($line, ",");
-	if($stop < 0)
-	{
-		$stop = $comma;
-	}
-	my $name = substr($line, $index, $stop - $index);
 	my $num = substr($line, $comma + 1);
 	chomp($num);
-	if(exists($file{$name}))
+	
+	if($index == 2)
 	{
-		$file{$name} += $num;
+		if(exists($file{"null"}))								# If there is no taxonomic unit, put in "null category."
+		{
+			$file{"null"} += $num;
+		}
+		else
+		{
+			$file{"null"} = $num;
+		}
 	}
 	else
 	{
-		$file{$name} = $num;
+		my $stop = index($line, ";", $index);
+		if($stop < 0)											# If this is the last taxonomic unit, a ";" won't be found
+		{
+			$stop = $comma;
+		}
+		my $name = substr($line, $index, $stop - $index);
+		if(exists($file{$name}))
+		{
+			$file{$name} += $num;
+		}
+		else
+		{
+			$file{$name} = $num;
+		}
 	}
 }
 
@@ -104,22 +120,22 @@ sub add_hash_to_table()
 	{
 		if(!(exists($file{$name})))
 		{
-			$table{$name} = $table{$name}."\t0";
+			$table{$name} = $table{$name}."\t0";				# If this file does not have this unit, set its count to 0
 		}
 		else
 		{
-			$table{$name} = $table{$name}."\t".$file{$name};
-			delete $file{$name};
+			$table{$name} = $table{$name}."\t".$file{$name};	# Add the count of the unit to the list
+			delete $file{$name};								# After unit has been added, remove from list
 		}
 	}
 	
-	foreach $name (keys %file)
+	foreach $name (keys %file)									# Add new taxonomic unit
 	{
-		for($a = 0; $a < $count - 1; $a++)
+		for($a = 0; $a < $count - 1; $a++)						# Set all other files processed to 0 for this unit
 		{
 			$table{$name} = $table{$name}."0\t";
 		}
-		$table{$name} = $table{$name}.$file{$name};
+		$table{$name} = $table{$name}.$file{$name};				# Add the count for the file for this unit at the end
 	}
 }
 
