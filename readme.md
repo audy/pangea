@@ -17,8 +17,13 @@ Last Updated: February 9, 2010
 7. Changes
  
 ### Perl
+Typical Usage:
 
-	Parameters:
+	perl PANGEA4MAC.pl -s inputSequences.fas -q inputSequences.fas.qual -b inputBarcodes.txt -d taxcollector.fas
+
+
+All parameters:
+
 		-s .fas raw sequence input file
 		-q .fas.qual quality input file
 		-b .txt file containing barcodes or put "n" for no barcodes
@@ -36,12 +41,9 @@ http://cran.r-project.org/
 
 ## Input
 
-Make sure the barcode input file is in the correct format: numbered starting at "01" with a tab between the number and the barcode
-sequence. Do not put any blank lines after the final barcode. Check the example in the PANGEA folder to see the exact format.
+Make sure the barcode input file is in the correct format: numbered starting at "01" with a tab between the number and the barcode sequence. Do not put any blank lines after the final barcode. Check the example in the PANGEA folder to see the exact format.
 
-A "-n minimum number of sequences selected.." option is included. Of course, this is not necessary to run the program. It just allows
-the user to specify if they have a different number of sequences they want for the normalized data to each have. Otherwise, the program 
-automatically sets the minimum at the lowest number a barcode has over 100.
+A "-n minimum number of sequences selected.." option is included. Of course, this is not necessary to run the program. It just allows the user to specify if they have a different number of sequences they want for the normalized data to each have. Otherwise, the program  automatically sets the minimum at the lowest number a barcode has over 100.
 
 ## Running PANGEA
 
@@ -55,22 +57,3 @@ Before starting PANGEA do not leave any of the files in the `PANGEA_output` fold
 
 See [TaxCollector](https://github.com/audy/taxcollector/tree/publication) on Github for instructions on how to prepare a TaxCollector database.
 
-## cd-hit-est Installation
-
-Before you begin using PANGEA, you must make sure `cd-hit-est` is correctly installed. On Windows operating systems, `cd-hit-est.exe should` already be in the backbone and ready to go, so no changes are necessary.
-
-For Mac OS X you must first have X Code installed. For Mac & Linux, in the CD-HIT directory, type 'Make'.  After everything finished compiling type `sudo cp cd-hit-est /usr/bin/cd-hit-est` type your password and hit return.
-
-## Chi-Square Tool
-
-The Chi-Square tool is utilized after PANGEA has run on a dataset. Once a dataset has run, do not change the folder name "PANGEA_Output".  Run the Chi-Square file for whichever system you have to generate your input files for R using the following example notation:
-
-Example:
-
-On Mac/UNIX:
-	Chi_Square4MAC.pl -l 1_4 2_3 5_6
-
-On Windows:
-	Chi_Square4WIN.pl -r C:/Program_Files/R/R-2.10.1/bin -l 1_4 2_3 5_6
-
-Where the numbers joined by the underscore are the pairs being compared. The script will generate files at each taxonomic level and place them into the Chi_Square folder. It will then generate R scripts and run them in R. Remember that this folder is replaced every time you run the Chi-Square tool, so be sure to change the name of any Chi_Square folder if you wish to save it.
