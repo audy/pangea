@@ -1,27 +1,4 @@
-# !/usr/bin/perl -w
-#	
-# PANGEA.pl
-# Version 2.0.0
-# Written by: David Crabb
-# Eric Triplett's Group
-# University of Florida
-# Last Modified: July 7, 2010
-###########################################################################
-#
-#	Parameters:
-#		-s .fas raw sequence input file
-#		-q .fas.qual quality input file
-#		-b .txt file containing barcodes or put "n" for no barcodes
-#		-d tax collector "isolates only" database file
-#		-u tax collector "all" database file
-#		-h input help
-#
-#	Caution: PANGEA.pl deletes the directory 
-#	PANGEA_Output every time it runs, make sure
-#	you retrieve all files from that directory
-#	before you run again!
-#
-###########################################################################
+#!/usr/bin/perl -w
 
 use File::Path;
 use File::Copy;

@@ -15,10 +15,16 @@ Last Updated: February 9, 2010
 5. cd-hit-est Installation
 6. Chi-Square Tool
 7. Changes
-
-## Perl, Python, and R
  
 ### Perl
+
+	Parameters:
+		-s .fas raw sequence input file
+		-q .fas.qual quality input file
+		-b .txt file containing barcodes or put "n" for no barcodes
+		-d tax collector "isolates only" database file
+		-u tax collector "all" database file
+		-h input help
 
 PANGEA uses Perl 5  which is available at
 http://www.perl.org/
